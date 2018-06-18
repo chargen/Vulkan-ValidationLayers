@@ -3419,6 +3419,14 @@ bool PreCallValidateCreateBufferView(const layer_data *device_data, const VkBuff
                                          "VK_BUFFER_USAGE_[STORAGE|UNIFORM]_TEXEL_BUFFER_BIT");
 
         const VkPhysicalDeviceLimits *device_limits = &(GetPhysicalDeviceProperties(device_data)->limits);
+        // Buffer view offset must be less than the size of buffer
+        if (pCreateInfo->offset >= buffer_state->createInfo.size) {
+            skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT,
+                            HandleToUint64(buffer_state->buffer), "VUID-VkBufferViewCreateInfo-offset-00925",
+                            "VkBufferViewCreateInfo offset (%" PRIu64 ") must be less than the size of the buffer (%" PRIu64 ").",
+                            pCreateInfo->offset, buffer_state->createInfo.size);
+        }
+
         // Buffer view offset must be a multiple of VkPhysicalDeviceLimits::minTexelBufferOffsetAlignment
         if ((pCreateInfo->offset % device_limits->minTexelBufferOffsetAlignment) != 0) {
             skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT,
